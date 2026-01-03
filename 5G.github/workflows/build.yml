@@ -1,1 +1,31 @@
+name: Compile Deauther Sketch
 
+on:
+  push:
+    branches: [ main ]          # Chạy khi push lên branch main
+  pull_request:
+    branches: [ main ]          # Chạy khi tạo PR vào main
+  workflow_dispatch:            # Cho phép chạy thủ công từ tab Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Arduino CLI
+      uses: arduino/setup-arduino-cli@v2
+
+    - name: Install Realtek AmebaD core (cho RTL8720DN/BW16)
+      run: |
+        arduino-cli config add board_manager.additional_urls https://github.com/ambiot/ambd_arduino/raw/master/Arduino_package/package_realtek_amebad_index.json
+        arduino-cli core update-index
+        arduino-cli core install realtek:AmebaD
+
+    - name: Compile the sketch
+      run: |
+        arduino-cli compile --fqbn realtek:amebad:bw16 . --warnings all
+      # Thay '.' bằng đường dẫn thư mục chứa file .ino nếu không phải ở root repo
+      # Ví dụ: arduino-cli compile --fqbn realtek:amebad:bw16 src/RTL8720dn-Deauther.ino
